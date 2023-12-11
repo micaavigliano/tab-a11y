@@ -1,6 +1,7 @@
 import React, {
   Dispatch,
   SetStateAction,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -30,18 +31,27 @@ interface ITabPanel {
 }
 
 const Tab: React.FC<ITab> = ({ name, id, setActive, active }) => {
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (id === active && btnRef.current) {
+      btnRef.current.focus();
+    }
+  }, [id, active]);
+
   return (
-    <div>
-      <button
-        role="tab"
-        className={`${
-          id === active ? "bg-pink-200" : "bg-transparent"
-        } py-2 px-4 divide-y divide-gray-400`}
-        onClick={() => setActive(id)}
-      >
-        {name}
-      </button>
-    </div>
+    <button
+      ref={btnRef}
+      role="tab"
+      tabIndex={id === active ? 0 : -1}
+      className={`${
+        id === active ? "bg-pink-200" : "bg-transparent"
+      } py-2 px-4 divide-y divide-gray-400`}
+      onClick={() => setActive(id)}
+      aria-selected={id === active ? true : false}
+    >
+      {name}
+    </button>
   );
 };
 
@@ -51,8 +61,8 @@ const TabPanel: React.FC<ITabPanel> = ({ content, id, active }) => {
       {id === active ? (
         <section
           role="tabpanel"
-          tabIndex={0}
           className={`bg-pink-300 w-9/12 border-solid border-2 border-black h-40 text-left p-2`}
+          aria-controls={`tab-${id}`}
         >
           {content}
         </section>
@@ -64,34 +74,47 @@ const TabPanel: React.FC<ITabPanel> = ({ content, id, active }) => {
 };
 
 const TabList: React.FC<ITablist> = ({ items }) => {
-  const [active, setActive] = useState(1);
+  const [active, setActive] = useState<number>(
+    items.length > 0 ? items[0].id : 0
+  );
   const tabRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
       if (event.key === "ArrowRight") {
         setActive((prevIndex) =>
           prevIndex < items.length ? prevIndex + 1 : 1
         );
-        console.log(active);
       } else if (event.key === "ArrowLeft") {
         setActive((prevIndex) =>
           prevIndex > 1 ? prevIndex - 1 : items.length
         );
-        console.log(active, "active left");
       }
-    };
+    },
+    [items.length]
+  );
 
+  useEffect(() => {
+    if (tabRef.current) {
+      const firstBtn = tabRef.current.querySelector("button");
+      if (firstBtn instanceof HTMLElement) {
+        firstBtn.focus();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [items.length, active]);
+  }, [items.length, active, handleKeyDown]);
 
   useEffect(() => {
     if (tabRef.current) {
-      tabRef.current.focus();
+      const firstBtn = tabRef.current.querySelectorAll("button");
+      firstBtn[0].focus();
     }
   }, []);
 
@@ -99,17 +122,14 @@ const TabList: React.FC<ITablist> = ({ items }) => {
     <>
       <div role="tablist" className="flex flex-row" ref={tabRef}>
         {items.map((item) => (
-          <div key={item.id}>
-            {" "}
-            <div role="presentation">
-              <Tab
-                id={item.id}
-                name={item.name}
-                active={active}
-                setActive={setActive}
-              />
-            </div>
-          </div>
+          <Tab
+            id={item.id}
+            name={item.name}
+            active={active}
+            setActive={setActive}
+            key={item.id}
+            aria-labelledby={`tab-${item.id}`}
+          />
         ))}
       </div>
       {items.map((item) => (
