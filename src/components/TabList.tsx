@@ -86,14 +86,25 @@ const TabList: React.FC<ITablist> = ({ items }) => {
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
-      if (event.key === "ArrowRight") {
-        setActive((prevIndex) =>
-          prevIndex < items.length ? prevIndex + 1 : 1
-        );
-      } else if (event.key === "ArrowLeft") {
-        setActive((prevIndex) =>
-          prevIndex > 1 ? prevIndex - 1 : items.length
-        );
+      const focusedElement = document.activeElement as HTMLElement;
+
+      const isButtonFocused = focusedElement?.getAttribute("role") === "tab";
+      const isInsideTabPanel = focusedElement?.closest('[role="tabpanel"]');
+
+      if (tabRef.current && isButtonFocused && !isInsideTabPanel) {
+        if (event.key === "ArrowRight") {
+          setActive((prevIndex) =>
+            prevIndex < items.length ? prevIndex + 1 : 1
+          );
+        } else if (event.key === "ArrowLeft") {
+          setActive((prevIndex) =>
+            prevIndex > 1 ? prevIndex - 1 : items.length
+          );
+        } else if (event.key === "Home") {
+          setActive(1);
+        } else if (event.key === "End") {
+          setActive(items.length);
+        }
       }
     },
     [items.length]
@@ -112,18 +123,21 @@ const TabList: React.FC<ITablist> = ({ items }) => {
       <h1 id="tablist-1" className="pb-12">
         Tabs accesibles
       </h1>
-      <div role="tablist" ref={tabRef} aria-labelledby="tablist-1">
-        <div className="flex flex-row divide-x divide-solid divide-pink-300">
-          {items.map((item) => (
-            <Tab
-              id={item.id}
-              name={item.name}
-              active={active}
-              setActive={setActive}
-              key={item.id}
-            />
-          ))}
-        </div>
+      <div
+        role="tablist"
+        aria-labelledby="tablist-1"
+        className="flex flex-row divide-x divide-solid divide-pink-300"
+        ref={tabRef}
+      >
+        {items.map((item) => (
+          <Tab
+            id={item.id}
+            name={item.name}
+            active={active}
+            setActive={setActive}
+            key={item.id}
+          />
+        ))}
       </div>
       {items.map((item) => (
         <TabPanel
