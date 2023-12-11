@@ -28,6 +28,7 @@ interface ITabPanel {
   content: string;
   id: number;
   active: number;
+  name: string;
 }
 
 const Tab: React.FC<ITab> = ({ name, id, setActive, active }) => {
@@ -43,10 +44,12 @@ const Tab: React.FC<ITab> = ({ name, id, setActive, active }) => {
     <button
       ref={btnRef}
       role="tab"
-      tabIndex={id === active ? 0 : -1}
+      type="button"
+      id={`tab-${id}`}
+      aria-controls={`tabpanel-${id}`}
       className={`${
         id === active ? "bg-pink-200" : "bg-transparent"
-      } py-2 px-4 divide-y divide-gray-400`}
+      } py-2 px-4`}
       onClick={() => setActive(id)}
       aria-selected={id === active ? true : false}
     >
@@ -55,19 +58,20 @@ const Tab: React.FC<ITab> = ({ name, id, setActive, active }) => {
   );
 };
 
-const TabPanel: React.FC<ITabPanel> = ({ content, id, active }) => {
+const TabPanel: React.FC<ITabPanel> = ({ content, id, active, name }) => {
   return (
     <>
-      {id === active ? (
+      {id === active && (
         <section
           role="tabpanel"
-          className={`bg-pink-300 w-9/12 border-solid border-2 border-black h-40 text-left p-2`}
-          aria-controls={`tab-${id}`}
+          className={`w-9/12 border-solid border-2 border-black h-40 text-left p-2 overflow-auto`}
+          id={`tabpanel-${id}`}
+          aria-labelledby={`tab-${id}`}
+          tabIndex={0}
         >
+          <h3>{name}</h3>
           {content}
         </section>
-      ) : (
-        <></>
       )}
     </>
   );
@@ -95,15 +99,6 @@ const TabList: React.FC<ITablist> = ({ items }) => {
   );
 
   useEffect(() => {
-    if (tabRef.current) {
-      const firstBtn = tabRef.current.querySelector("button");
-      if (firstBtn instanceof HTMLElement) {
-        firstBtn.focus();
-      }
-    }
-  }, []);
-
-  useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
@@ -111,31 +106,32 @@ const TabList: React.FC<ITablist> = ({ items }) => {
     };
   }, [items.length, active, handleKeyDown]);
 
-  useEffect(() => {
-    if (tabRef.current) {
-      const firstBtn = tabRef.current.querySelectorAll("button");
-      firstBtn[0].focus();
-    }
-  }, []);
-
   return (
     <>
-      <div role="tablist" className="flex flex-row" ref={tabRef}>
-        {items.map((item) => (
-          <Tab
-            id={item.id}
-            name={item.name}
-            active={active}
-            setActive={setActive}
-            key={item.id}
-            aria-labelledby={`tab-${item.id}`}
-          />
-        ))}
+      <h1 id="tablist-1" className="pb-12">
+        Tabs accesibles
+      </h1>
+      <div role="tablist" ref={tabRef} aria-labelledby="tablist-1">
+        <div className="flex flex-row divide-x divide-solid divide-pink-300">
+          {items.map((item) => (
+            <Tab
+              id={item.id}
+              name={item.name}
+              active={active}
+              setActive={setActive}
+              key={item.id}
+            />
+          ))}
+        </div>
       </div>
       {items.map((item) => (
-        <div key={item.id}>
-          <TabPanel content={item.content} id={item.id} active={active} />
-        </div>
+        <TabPanel
+          content={item.content}
+          id={item.id}
+          active={active}
+          name={item.name}
+          key={item.id}
+        />
       ))}
     </>
   );
