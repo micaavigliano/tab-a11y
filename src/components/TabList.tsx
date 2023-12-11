@@ -1,5 +1,6 @@
 import React, {
   Dispatch,
+  ReactNode,
   SetStateAction,
   useCallback,
   useEffect,
@@ -10,7 +11,7 @@ import React, {
 interface IItems {
   name: string;
   id: number;
-  content: string;
+  content: string | ReactNode;
 }
 
 interface ITablist {
@@ -25,7 +26,7 @@ interface ITab {
 }
 
 interface ITabPanel {
-  content: string;
+  content: string | ReactNode;
   id: number;
   active: number;
   name: string;
