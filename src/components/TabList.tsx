@@ -63,7 +63,7 @@ const TabPanel: React.FC<ITabPanel> = ({ content, id, active, name }) => {
   return (
     <>
       {id === active && (
-        <section
+        <div
           role="tabpanel"
           className={`w-9/12 border-solid border-2 border-black h-40 text-left p-2 overflow-auto`}
           id={`tabpanel-${id}`}
@@ -72,7 +72,7 @@ const TabPanel: React.FC<ITabPanel> = ({ content, id, active, name }) => {
         >
           <h3>{name}</h3>
           {content}
-        </section>
+        </div>
       )}
     </>
   );
